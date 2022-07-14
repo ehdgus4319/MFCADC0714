@@ -3,7 +3,7 @@
 //
 
 #pragma once
-
+#include "SerialComm.h"
 
 // CMFCADC0714Dlg 대화 상자
 class CMFCADC0714Dlg : public CDialogEx
@@ -34,4 +34,16 @@ protected:
 public:
 	afx_msg void OnBnClickedButton1();
 	afx_msg void OnBnClickedButton2();
+	CComboBox m_combo_comport_list;
+	CString m_str_comport;
+	CComboBox m_combo_baudrate_list;
+	CString m_combo_baudrate;
+	CListCtrl m_DataList;
+
+	//kdh 추가
+	BOOL comport_state;
+	afx_msg void OnBnClickedBtConnect();
+	CSerialComm* m_comm;
+	LRESULT		OnThreadClosed(WPARAM length, LPARAM lpara);
+	LRESULT		OnReceive(WPARAM length, LPARAM lpara);
 };

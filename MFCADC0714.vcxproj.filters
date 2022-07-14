@@ -36,6 +36,12 @@
     <ClInclude Include="CMysqlController.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
+    <ClInclude Include="SerialComm.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="stdafx.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MFCADC0714.cpp">
@@ -48,6 +54,12 @@
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="CMysqlController.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="SerialComm.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="stdafx.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
