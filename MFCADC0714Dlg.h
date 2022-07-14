@@ -48,4 +48,5 @@ public:
 	LRESULT		OnReceive(WPARAM length, LPARAM lpara);
 	afx_msg void OnCbnSelchangeComboComport();
 	afx_msg void OnCbnSelchangeComboBaudrate();
+	CListCtrl m_DataList2;
 };

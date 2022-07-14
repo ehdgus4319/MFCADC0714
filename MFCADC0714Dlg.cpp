@@ -19,7 +19,7 @@
 #include <sstream> 
 using namespace std;
 
-vector<char>rxBuffer;
+
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -79,6 +79,7 @@ void CMFCADC0714Dlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_COMBO_BAUDRATE, m_combo_baudrate_list);
 	DDX_CBString(pDX, IDC_COMBO_BAUDRATE, m_combo_baudrate);
 	DDX_Control(pDX, IDC_LIST1, m_DataList);
+	DDX_Control(pDX, IDC_LIST3, m_DataList2);
 }
 
 BEGIN_MESSAGE_MAP(CMFCADC0714Dlg, CDialogEx)
@@ -128,6 +129,10 @@ BOOL CMFCADC0714Dlg::OnInitDialog()
 	m_DataList.InsertColumn(0, _T("ID"), LVCFMT_CENTER, 50);
 	m_DataList.InsertColumn(1, _T("시간"), LVCFMT_CENTER, 200);
 	m_DataList.InsertColumn(2, _T("ADC값"), LVCFMT_CENTER, 300);
+
+	m_DataList2.InsertColumn(0, _T("ID"), LVCFMT_CENTER, 50);
+	m_DataList2.InsertColumn(1, _T("시간"), LVCFMT_CENTER, 200);
+	m_DataList2.InsertColumn(2, _T("ADC값"), LVCFMT_CENTER, 300);
 
 	m_combo_comport_list.AddString(_T("COM1"));
 	m_combo_comport_list.AddString(_T("COM2"));
@@ -295,12 +300,10 @@ LRESULT	CMFCADC0714Dlg::OnThreadClosed(WPARAM length, LPARAM lpara)
 	return 0;
 }
 
-
+vector<char>rxBuffer;
 LRESULT CMFCADC0714Dlg::OnReceive(WPARAM length, LPARAM lpara)
 {
 
-
-	
 
 	//CString str;
 	char* data = new char[length + 1];
@@ -308,13 +311,13 @@ LRESULT CMFCADC0714Dlg::OnReceive(WPARAM length, LPARAM lpara)
 	if(m_comm)
 	{
 		
-		m_comm->Receive(data, length);	// Length 길이만큼 데이터 받음.
+		m_comm->Receive(data, (length));	// Length 길이만큼 데이터 받음.
 		data[length] = _T('\0');
-		//str += _T("\r\n");
-		//for (int i = 0; i < length; i++)
-		//{
-		//	rxBuffer.push_back(data[i]);
-		//}
+		
+		for (int i = 0; i < length; i++)
+		{
+			rxBuffer.push_back(data[i]);
+		}
 
 		CMysqlController conn;
 		UpdateData(TRUE);
@@ -322,7 +325,6 @@ LRESULT CMFCADC0714Dlg::OnReceive(WPARAM length, LPARAM lpara)
 		CString rxBuffer_temp;
 		CString result;
 		rxBuffer_temp = (LPSTR)data; // 시간 값 (char -> CString)
-
 		result = "insert into tb_adc(시간, ADC값) VALUES(";
 		result += "NOW(),";
 		result += rxBuffer_temp + ")";
