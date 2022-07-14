@@ -15,6 +15,11 @@
 #include <string>
 #include <stdio.h>
 #include <time.h>
+#include <vector>
+#include <sstream> 
+using namespace std;
+
+vector<char>rxBuffer;
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -83,6 +88,8 @@ BEGIN_MESSAGE_MAP(CMFCADC0714Dlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BUTTON1, &CMFCADC0714Dlg::OnBnClickedButton1)
 	ON_BN_CLICKED(IDC_BUTTON2, &CMFCADC0714Dlg::OnBnClickedButton2)
 	ON_BN_CLICKED(IDC_BT_CONNECT, &CMFCADC0714Dlg::OnBnClickedBtConnect)
+
+	ON_MESSAGE(WM_MYRECEIVE, &CMFCADC0714Dlg::OnReceive)
 END_MESSAGE_MAP()
 
 
@@ -198,7 +205,7 @@ HCURSOR CMFCADC0714Dlg::OnQueryDragIcon()
 }
 
 
-void CMFCADC0714Dlg::OnBnClickedButton1() // Select
+void CMFCADC0714Dlg::OnBnClickedButton1() // Select 새로고침
 {
 	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
 	CMysqlController conn;
@@ -267,4 +274,104 @@ void CMFCADC0714Dlg::OnBnClickedBtConnect()
 		}
 
 	}
+}
+void CMFCADC0714Dlg::OnCbnSelchangeComboComport()
+{
+	// TODO: Add your control notification handler code here
+	UpdateData(); 
+}
+
+
+void CMFCADC0714Dlg::OnCbnSelchangeComboBaudrate()
+{
+	// TODO: Add your control notification handler code here
+	UpdateData();
+}
+LRESULT	CMFCADC0714Dlg::OnThreadClosed(WPARAM length, LPARAM lpara)
+{
+	((CSerialComm*)lpara)->HandleClose();
+	delete ((CSerialComm*)lpara);
+
+	return 0;
+}
+
+
+LRESULT CMFCADC0714Dlg::OnReceive(WPARAM length, LPARAM lpara)
+{
+
+
+	
+
+	//CString str;
+	char* data = new char[length + 1];
+
+	if(m_comm)
+	{
+		
+		m_comm->Receive(data, length);	// Length 길이만큼 데이터 받음.
+		data[length] = _T('\0');
+		//str += _T("\r\n");
+		//for (int i = 0; i < length; i++)
+		//{
+		//	rxBuffer.push_back(data[i]);
+		//}
+
+		CMysqlController conn;
+		UpdateData(TRUE);
+		char* send_data;
+		CString rxBuffer_temp;
+		CString result;
+		rxBuffer_temp = (LPSTR)data; // 시간 값 (char -> CString)
+
+		result = "insert into tb_adc(시간, ADC값) VALUES(";
+		result += "NOW(),";
+		result += rxBuffer_temp + ")";
+		send_data = (LPSTR)(LPCSTR)result;
+		conn.InsertQuery("DELETE FROM tb_adc WHERE 시간< NOW() - INTERVAL 10 minute");  // 10분전 데이터 삭제
+		conn.InsertQuery(send_data);  // DB로  ADC 값 데이터 보내기
+
+		//UpdateData(FALSE);
+
+		string result_str;
+		string line;
+		stringstream result_stream;
+
+
+		// 화면리스트에 DB 불러오기
+		m_DataList.DeleteAllItems();  // 화면 비우기
+		if (conn.SelectQuery("select * from tb_adc", result) == true)
+		{
+			result_str = string(CT2CA(result));
+			result_stream.str(result_str);
+			while (getline(result_stream, line))
+			{
+				stringstream lineStream(line); //한줄의 데이터를 가지고 사용
+				string cell;
+				CString cell2;
+				int count0 = m_DataList.GetItemCount();
+				int count1 = 0;
+				while (getline(lineStream, cell, ','))
+				{
+					cell2 = cell.c_str();
+
+					if (count1 == 0)
+					{
+						m_DataList.InsertItem(count0, cell2);
+					}
+					else
+					{
+						m_DataList.SetItem(count0, count1, LVIF_TEXT, cell2, 0, 0,
+							0, 0);
+					}
+					count1++;
+				}
+
+			}
+			UpdateData(false);
+			//AfxMessageBox(result);
+		}
+
+	}
+
+	return 0;
 }

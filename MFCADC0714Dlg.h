@@ -46,4 +46,6 @@ public:
 	CSerialComm* m_comm;
 	LRESULT		OnThreadClosed(WPARAM length, LPARAM lpara);
 	LRESULT		OnReceive(WPARAM length, LPARAM lpara);
+	afx_msg void OnCbnSelchangeComboComport();
+	afx_msg void OnCbnSelchangeComboBaudrate();
 };
