@@ -49,4 +49,5 @@ public:
 	afx_msg void OnCbnSelchangeComboComport();
 	afx_msg void OnCbnSelchangeComboBaudrate();
 	CListCtrl m_DataList2;
+	afx_msg void OnLvnItemchangedList1(NMHDR* pNMHDR, LRESULT* pResult);
 };

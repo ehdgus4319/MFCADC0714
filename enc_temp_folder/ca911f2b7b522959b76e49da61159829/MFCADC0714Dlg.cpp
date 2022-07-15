@@ -316,6 +316,8 @@ LRESULT CMFCADC0714Dlg::OnReceive(WPARAM length, LPARAM lpara)
 			rxBuffer.push_back(data[i]);
 		}
 
+		
+
 		if (rxBuffer.size() < 7)
 		{
 			return -1;
@@ -328,6 +330,7 @@ LRESULT CMFCADC0714Dlg::OnReceive(WPARAM length, LPARAM lpara)
 			if (rxBuffer.at(0) == 'S' && rxBuffer.at(5) == '&' && rxBuffer.at(6) == '&')
 			{
 				adc_str.Format(_T("%c%c%c%c"), rxBuffer.at(1), rxBuffer.at(2), rxBuffer.at(3), rxBuffer.at(4));
+				//   abcd abcdeabcde
 				rxBuffer.erase(rxBuffer.begin(), rxBuffer.begin() + 7);
 			}
 			else
