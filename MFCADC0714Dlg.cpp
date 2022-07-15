@@ -92,6 +92,8 @@ BEGIN_MESSAGE_MAP(CMFCADC0714Dlg, CDialogEx)
 
 	ON_MESSAGE(WM_MYRECEIVE, &CMFCADC0714Dlg::OnReceive)
 	ON_NOTIFY(LVN_ITEMCHANGED, IDC_LIST1, &CMFCADC0714Dlg::OnLvnItemchangedList1)
+
+	ON_NOTIFY(HDN_ITEMCLICK, 0, &CMFCADC0714Dlg::OnHdnItemclickList1)
 END_MESSAGE_MAP()
 
 
@@ -278,7 +280,6 @@ void CMFCADC0714Dlg::OnBnClickedBtConnect()
 		{
 			AfxMessageBox(_T("ERROR!"));
 		}
-
 	}
 }
 void CMFCADC0714Dlg::OnCbnSelchangeComboComport()
@@ -336,10 +337,7 @@ LRESULT CMFCADC0714Dlg::OnReceive(WPARAM length, LPARAM lpara)
 			}
 		}
 
-		
-		
 
-		
 		CMysqlController conn;
 		UpdateData(TRUE);
 		char* send_data;
@@ -399,4 +397,104 @@ void CMFCADC0714Dlg::OnLvnItemchangedList1(NMHDR* pNMHDR, LRESULT* pResult)
 	LPNMLISTVIEW pNMLV = reinterpret_cast<LPNMLISTVIEW>(pNMHDR);
 	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
 	*pResult = 0;
+}
+
+// 리스트컨트롤 컬럼 클릭시 데이터 정렬
+void CMFCADC0714Dlg::OnHdnItemclickList1(NMHDR* pNMHDR, LRESULT* pResult)
+{
+	LPNMLISTVIEW pNMLV = reinterpret_cast<LPNMLISTVIEW>(pNMHDR);
+
+	// 클릭한 컬럼의 인덱스
+	int nColumn = pNMLV->iItem;
+
+	// 현 리스트 컨트롤에 있는 데이터 총 자료 개수만큼 저장
+	for (int i = 0; i < (m_DataList.GetItemCount()); i++) {
+		m_DataList.SetItemData(i, i);
+	}
+
+	// 정렬 방식 저장
+	m_bAscending = !m_bAscending;
+
+	// 정렬 관련 구조체 변수 생성 및 데이터 초기화
+	SORTPARAM sortparams;
+	sortparams.pList = &m_DataList;
+	sortparams.iSortColumn = nColumn;
+	sortparams.bSortDirect = m_bAscending;
+
+	// | 0	|  1   |     2		 |
+	// | PID| NAME | USAGE(rate) |
+
+	// PID 정렬
+	if (nColumn == 0)
+		sortparams.flag = 0;
+
+	// NAME은 알파벳 정렬
+	if (nColumn == 1)
+		sortparams.flag = 1;
+
+	// Usage(rate) 정렬
+	if (nColumn == 2 || nColumn == 3)
+		sortparams.flag = 2;
+
+	// 정렬 함수 호출
+	m_DataList.SortItems(&CompareItem, (LPARAM)&sortparams);
+	*pResult = 0;
+}
+
+int CMFCADC0714Dlg::CompareItem(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
+{
+	CListCtrl* pList = ((SORTPARAM*)lParamSort)->pList;
+	int iSortColumn = ((SORTPARAM*)lParamSort)->iSortColumn;
+	bool bSortDirect = ((SORTPARAM*)lParamSort)->bSortDirect;
+	int flag = ((SORTPARAM*)lParamSort)->flag;
+
+	LVFINDINFO info1, info2;
+	info1.flags = LVFI_PARAM;
+	info1.lParam = lParam1;
+
+	info2.flags = LVFI_PARAM;
+	info2.lParam = lParam2;
+
+	int irow1 = pList->FindItem(&info1, -1);
+	int irow2 = pList->FindItem(&info2, -1);
+
+	CString strItem1 = pList->GetItemText(irow1, iSortColumn);
+	CString strItem2 = pList->GetItemText(irow2, iSortColumn);
+
+	// PID 정렬
+	if (flag == 0)
+	{
+		int iItem1 = _tstoi(strItem1);
+		int iItem2 = _tstoi(strItem2);
+
+		if (bSortDirect) {
+			return iItem1 == iItem2 ? 0 : iItem1 > iItem2;
+		}
+		else {
+			return iItem1 == iItem2 ? 0 : iItem1 < iItem2;
+		}
+	}
+	// NAME 정렬
+	else if (flag == 1)
+	{
+		return	bSortDirect ? strcmp(LPSTR(LPCTSTR(strItem1)), LPSTR(LPCTSTR(strItem2))) : -strcmp(LPSTR(LPCTSTR(strItem1)), LPSTR(LPCTSTR(strItem2)));
+	}
+	// RATE 정렬
+	else if (flag == 2)
+	{
+		int dItem1 = _tstoi(strItem1);
+		int dItem2 = _tstoi(strItem2);
+
+		if (bSortDirect) {
+			return dItem1 == dItem2 ? 0 : dItem1 > dItem2;
+		}
+		else {
+			return dItem1 == dItem2 ? 0 : dItem1 < dItem2;
+		}
+	}
+	else {
+		return AfxMessageBox(_T("정렬할 수 없습니다!"));
+	}
+
+
 }
